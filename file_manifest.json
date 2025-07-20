@@ -1,0 +1,17 @@
+﻿[
+    "server.py",
+    "scraper_module.py",
+    "updater.py",
+    "index.html",
+    "diagnose.html",
+    "backup.html",
+    "systems.json",
+    "lang/en.json",
+    "lang/de.json",
+    "lang/fr.json",
+    "lang/es.json",
+    "lang/it.json",
+    "lang/sv.json",
+    "web/backup.html",
+    "web/diagnose.html"
+]
