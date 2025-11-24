@@ -6,7 +6,7 @@ A web-based metadata scraper for the rcade software ecosystem. This tool allows 
 ## 1. Installation
 This tool runs as a system overlay. No complex installation is required.
 
-1.  Copy the overlay file directly on the root of your rcade bootstick
+1.  Copy the "overlay" file directly to the root of your rcade bootstick
 2.  **Reboot** your arcade machine.
 3.  The scraper server will start automatically in the background once the system is ready.
 
