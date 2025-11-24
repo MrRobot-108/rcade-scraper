@@ -1,0 +1,599 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title data-i18n="page_title_dashboard">ROM Scraper - Dashboard</title>
+    <style>
+        :root{--bg-deep-dark:#121821;--bg-dark:#1a222e;--bg-light:#2c3a4b;--accent-primary:#00bcd4;--accent-secondary:#0097a7;--text-light:#e0e7ff;--text-medium:#a0a8b4;--text-dark:#121821;--border-color:#3a4a5f;--success-color:#4caf50;--error-color:#d32f2f;--font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Roboto',sans-serif}*,*:before,*:after{box-sizing:border-box}html{font-size:16px}body{font-family:var(--font-family);margin:0;background-color:var(--bg-deep-dark);color:var(--text-light);display:flex;flex-direction:column;height:100vh;overflow:hidden}.main-container{display:flex;flex:1;padding:1.5rem;gap:1.5rem;overflow:hidden}.left-panel{flex:3;display:flex;flex-direction:column;min-width:0}.right-panel{flex:2;display:flex;flex-direction:column;gap:1.5rem;min-width:450px}.panel-box{background-color:var(--bg-dark);border:1px solid var(--border-color);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.2);padding:1.5rem;display:flex;flex-direction:column}.panel-header{margin:-1.5rem -1.5rem 1.5rem;padding:1rem 1.5rem;border-bottom:1px solid var(--border-color);background-color:rgba(0,0,0,0.1)}.panel-header h2{margin:0;font-size:1.25rem}.app-header{padding:1rem 1.5rem;background-color:var(--bg-dark);border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center}.app-header h1{margin:0;font-size:1.75rem;color:var(--accent-primary);font-weight:600}.header-branding{display:flex;align-items:center;gap:1rem;font-size:.8rem;color:var(--text-medium);text-align:right}.header-branding .beta-tag{background-color:var(--accent-secondary);color:var(--text-light);padding:.2rem .5rem;border-radius:6px;font-weight:700}#ui-lang-select{background-color:var(--bg-light);border:1px solid var(--border-color);color:var(--text-light);border-radius:6px;padding:0.25rem 0.5rem;font-size:0.8rem;}#rom-table-container{flex:1;min-height:0}.table-controls{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}#rom-table{flex:1;overflow-y:auto;margin-top:1.5rem}table{width:100%;border-collapse:separate;border-spacing:0}th,td{padding:.75rem;text-align:left;vertical-align:middle;border-bottom:1px solid var(--border-color)}thead th{position:sticky;top:0;background-color:var(--bg-light);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}tbody tr:hover{background-color:var(--bg-light)}.rom-name-cell{font-weight:600}.game-name-sub{font-size:.8rem;color:var(--text-medium);font-weight:400}img.thumb,.thumb-placeholder{width:64px;height:64px;border-radius:8px;object-fit:contain;vertical-align:middle;background-color:var(--bg-deep-dark);cursor:pointer}.missing{color:var(--error-color);font-weight:700;font-size:.8rem}.input-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1rem;margin-bottom:1.5rem}.input-group label{font-size:.8rem;color:var(--text-medium);margin-bottom:.25rem;display:block}input,select{width:100%;padding:.6rem;background-color:var(--bg-deep-dark);border:1px solid var(--border-color);border-radius:6px;color:var(--text-light);font-size:.9rem;transition:border-color .2s,box-shadow .2s}input:focus,select:focus{outline:0;border-color:var(--accent-primary);box-shadow:0 0 0 2px rgba(0,188,212,.3)}.button{padding:.75rem 1.25rem;border:none;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .2s ease;text-align:center;text-decoration:none;display:inline-block}.button-primary{background-color:var(--accent-primary);color:var(--text-dark)}.button-primary:hover:not(:disabled){background-color:var(--accent-secondary);box-shadow:0 4px 15px rgba(0,188,212,.2);transform:translateY(-2px)}.button-secondary{background-color:var(--bg-light);color:var(--text-light)}.button-secondary:hover:not(:disabled){background-color:#3b506b}.button-danger{background-color:var(--error-color);color:var(--text-light)}.button-success{background-color:var(--success-color);color:var(--text-light)}.button-group{display:flex;gap:1rem}.toggle-button{flex-grow:1;background-color:var(--bg-light);color:var(--text-medium);padding:.5rem}.toggle-button.active{background-color:var(--accent-secondary);color:var(--text-light);box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}#log-container{flex:1;min-height:0}#logbox{height:100%;background-color:var(--bg-deep-dark);color:#4ade80;font-family:'Fira Code','Courier New',monospace;font-size:.85rem;padding:1rem;border-radius:8px;overflow-y:auto;white-space:pre-wrap;border:1px solid var(--border-color)}.scraping{background:linear-gradient(90deg,var(--bg-dark),var(--bg-light),var(--bg-dark));background-size:200% 100%;animation:pulse-bg 2s ease-in-out infinite}@keyframes pulse-bg{0%{background-position:200% 0}100%{background-position:-200% 0}}#lightbox-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.8);z-index:1000;display:none;justify-content:center;align-items:center;backdrop-filter:blur(5px)}#lightbox-content{position:relative;max-width:80vw;max-height:80vh}#lightbox-content img,#lightbox-content video{width:auto;height:auto;max-width:100%;max-height:100%;display:block;border-radius:8px}#lightbox-close{position:absolute;top:-40px;right:0;font-size:2.5rem;color:#fff;cursor:pointer}
+        #roms.filenames-view .rom-name-cell + td,
+        #roms.filenames-view .rom-name-cell + td + td,
+        #roms.filenames-view .rom-name-cell + td + td + td,
+        #roms.filenames-view .rom-name-cell + td + td + td + td {
+            max-width: 200px;
+            word-wrap: break-word;
+            white-space: normal;
+            font-size: 0.8rem;
+        }
+        .button.button-primary:disabled,
+        .button.button-success:disabled,
+        .button.button-danger:disabled {
+            background-color: var(--bg-light);
+            color: var(--text-medium);
+            opacity: 0.6;
+        }
+		.toggle-button.button-danger { background-color: var(--error-color); color: var(--text-light);}
+        #roms {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        #roms th:nth-child(1) { width: 5%; }
+        #roms th:nth-child(2) { width: 40%; }
+        #roms th:nth-child(3),
+        #roms th:nth-child(4),
+        #roms th:nth-child(5),
+        #roms th:nth-child(6) { width: 13.75%; }
+
+        .rom-name-cell {
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="lightbox-overlay" onclick="closeModal()"><span id="lightbox-close" onclick="closeModal()">&times;</span><div id="lightbox-content" onclick="event.stopPropagation()"></div></div>
+    <header class="app-header">
+        <h1 data-i18n="app_title"></h1>
+        <div class="header-branding">
+            <a href="advanced_settings.html" class="button button-secondary" style="margin-right: 1rem; padding: 0.5rem 1rem; white-space: nowrap;" data-i18n="advanced_settings_button" data-i18n-title="advanced_settings_button_tooltip">Advanced Settings</a>
+            <a href="backup.html" class="button button-secondary" style="margin-right: 1rem; padding: 0.5rem 1rem; white-space: nowrap;" data-i18n="manage_backups_button" data-i18n-title="manage_backups_tooltip">Manage Backups</a>
+            <div id="update-container" style="display: flex; align-items: center; gap: 0.5rem;">
+                <button id="version-display-btn" class="button toggle-button" style="white-space: nowrap;" disabled data-i18n-title="version_display_tooltip">Checking...</button>
+                <button id="update-check-btn" class="button button-secondary" onclick="checkForUpdates(true)" style="padding: 0.25rem 0.5rem; line-height: 1;" data-i18n-title="update_check_button_tooltip">⟳</button>
+            </div>
+            <span data-i18n="by_author"></span>
+            <select id="ui-lang-select" title="Select UI Language">
+                <option value="en">English (UI)</option>
+                <option value="de">German (UI)</option>
+                <option value="fr">Français (UI)</option>
+                <option value="es">Español (UI)</option>
+                <option value="it">Italiano (UI)</option>
+                <option value="sv">Svenska (UI)</option>
+            </select>
+        </div>
+    </header>
+    <div class="main-container">
+        <div class="left-panel">
+            <div id="rom-table-container" class="panel-box">
+                <div class="panel-header">
+                    <div class="table-controls">
+                        <select id="system-select" onchange="loadSystem(this.value)" data-i18n-title="select_system_label"></select>
+                        <input type="text" id="filter" onkeyup="filterTable()" data-i18n-placeholder="filter_placeholder" data-i18n-title="filter_placeholder_tooltip">
+                        <button class="button button-secondary" onclick="filterMissing()" data-i18n="show_missing_button" data-i18n-title="show_missing_button_tooltip"></button>
+                        <button class="button button-secondary" onclick="clearAllSelections()" data-i18n="clear_selection_button" data-i18n-title="clear_selection_button_tooltip"></button>
+                        <div style="flex-grow: 1;"></div>
+                        <button id="toggle-view-btn" class="button button-secondary" onclick="toggleMediaView()" data-i18n-title="toggle_view_tooltip"></button>
+                        <button class="button button-secondary" onclick="refreshTable()" data-i18n-title="refresh_button_tooltip">⟳ <span data-i18n="refresh_button"></span></button>
+                    </div>
+                </div>
+                <div id="rom-table"></div>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div id="controls-container" class="panel-box">
+                <div class="panel-header"><h2 data-i18n="actions_title"></h2></div>
+                <div class="button-group" style="margin-bottom: 2rem;">
+                    <button id="start-scrape-btn" class="button button-success" onclick="startScrape()" data-i18n-title="scrape_button_tooltip">
+                        <span data-i18n="scrape_button"></span> <span id="scrape-counter"></span>
+                    </button>
+                    <button id="stop-scrape-btn" class="button button-danger" onclick="stopScrape()" data-i18n="stop_button" data-i18n-title="stop_button_tooltip" disabled></button>
+                    <button id="diagnose-rom-btn" class="button button-primary" disabled onclick="diagnoseRom()" data-i18n="deep_scrape_button" data-i18n-title="deep_scrape_button_tooltip"></button>
+                </div>
+                <div class="input-group">
+                    <button class="button toggle-button" id="toggle-force" data-i18n="force_redownload_button" data-i18n-title="force_redownload_button_tooltip"></button>
+                    <button class="button toggle-button" id="toggle-force-metadata" data-i18n="force_metadata_button" data-i18n-title="force_metadata_button_tooltip"></button>
+                    <button class="button toggle-button" id="toggle-removestockpics" data-i18n="clean_paths_button" data-i18n-title="clean_paths_button_tooltip"></button>
+                </div>
+                <div class="input-group" style="margin-top: 1rem;">
+                    <div><label for="ssid" data-i18n="ssid_label"></label><input type="text" id="ssid"></div>
+                    <div><label for="sspassword" data-i18n="sspass_label"></label><input type="password" id="sspassword"></div>
+                </div>
+                <div class="input-group">
+                    <div><label for="scraper-lang-select" data-i18n="scraper_language_label"></label><select id="scraper-lang-select" title="Select the language for game descriptions"><option value="none">None</option><option value="en">English</option><option value="de">German</option><option value="fr">French</option><option value="es">Spanish</option><option value="it">Italian</option><option value="sv">Swedish</option></select></div>
+                    <div style="align-self: flex-end;"><button id="save-settings-btn" class="button button-secondary" onclick="saveAllSettings(true)" data-i18n="save_check_login_button" data-i18n-title="save_check_login_button_tooltip"></button></div>
+                </div>
+            </div>
+            <div id="log-container" class="panel-box"><div class="panel-header"><h2 data-i18n="log_title"></h2></div><pre id="logbox" data-i18n="log_waiting"></pre></div>
+        </div>
+    </div>
+<script>
+    let i18nData = {};
+    let activeSettings = {};
+    async function fetchLanguage(lang) {
+        try {
+            const response = await fetch(`/lang/${lang}.json?v=${new Date().getTime()}`);
+            if (!response.ok) throw new Error(`Language file for '${lang}' not found.`);
+            i18nData = await response.json();
+            localStorage.setItem('preferred_language', lang);
+            document.documentElement.lang = lang;
+            document.getElementById('ui-lang-select').value = lang;
+            applyTranslations();
+        } catch (error) {
+            console.error(error.message);
+            if (lang !== 'en') { console.warn(`Falling back to English.`); await fetchLanguage('en'); }
+        }
+    }
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.dataset.i18n; if (i18nData[key]) el.textContent = i18nData[key]; });
+        document.querySelectorAll('[data-i18n-title]').forEach(el => { const key = el.dataset.i18nTitle; if (i18nData[key]) el.title = i18nData[key]; });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.dataset.i18nPlaceholder; if (i18nData[key]) el.placeholder = i18nData[key]; });
+        document.title = i18nData.page_title_dashboard || 'ROM Scraper - Dashboard';
+        
+        const allSystemsOption = document.querySelector("#system-select option[value='ALL']");
+        if(allSystemsOption) allSystemsOption.textContent = i18nData.all_systems_option || 'All Systems';
+
+        const table = document.querySelector("#rom-table table");
+        if (table) {
+            const headers = table.querySelectorAll("thead th");
+            const keys = ["", "table_header_name", "table_header_image", "table_header_video", "table_header_logo", "table_header_box"];
+            headers.forEach((th, i) => {
+                const headerTextSpan = th.querySelector('span');
+                if (headerTextSpan && i18nData[keys[i]]) {
+                    headerTextSpan.textContent = i18nData[keys[i]];
+                }
+            });
+        }
+        updateToggleViewButtonText();
+    }
+    
+    let mediaViewMode = 'media';
+    let allSystemsRomData = {}, scrapeInProgress = false, logFetchIntervalId, lazyLoadObserver;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        const preferredLang = localStorage.getItem('preferred_language') || 'en';
+        await fetchLanguage(preferredLang);
+        
+        await loadSettings(); 
+
+        try {
+            const response = await fetch("/get-system-data");
+            if (!response.ok) throw new Error("Server error fetching system data");
+            allSystemsRomData = await response.json();
+            
+            const select = document.getElementById("system-select");
+            select.innerHTML = `<option value="ALL">${i18nData.all_systems_option || 'All Systems'}</option>`;
+            const availableSystems = Object.keys(allSystemsRomData).filter(s => s !== "ALL" && allSystemsRomData[s].length > 0).sort();
+            availableSystems.forEach(system => { select.add(new Option(system, system)); });
+
+            const savedSystem = sessionStorage.getItem('lastSelectedSystem');
+            const savedFilter = sessionStorage.getItem('lastFilterText') || '';
+            let initialSystem = "ALL";
+            if (savedSystem && availableSystems.includes(savedSystem)) { initialSystem = savedSystem; } 
+            else if (availableSystems.length > 0) { initialSystem = availableSystems[0]; }
+            
+            select.value = initialSystem;
+            loadSystem(initialSystem); // This will now use the pre-loaded settings
+            
+            if (savedFilter) {
+                document.getElementById("filter").value = savedFilter;
+                filterTable(savedFilter);
+            }
+        } catch (error) { 
+            document.getElementById("logbox").textContent = `Error loading system data: ${error.message}\n`; 
+        }
+
+        // Step 3: Setup other parts of the UI
+        setupEventListeners();
+        fetchLogRepeatedly();
+        checkForUpdates();
+    });
+
+    function setupEventListeners() {
+        document.querySelectorAll('.toggle-button').forEach(button => { button.addEventListener('click', function() { this.classList.toggle('active'); saveAllSettings(false); }); });
+        document.getElementById("scraper-lang-select").addEventListener('change', () => saveAllSettings(false));
+        document.getElementById("ui-lang-select").addEventListener('change', (e) => fetchLanguage(e.target.value));
+        document.getElementById("rom-table").addEventListener('change', e => { if (e.target.matches('#roms tbody input[type=checkbox]')) updateSelectAllCheckbox(); });
+    }
+    function getRomFilenameStem(romPath) { return romPath.split(/[\\/]/).pop().split('.').slice(0, -1).join('.'); }
+    function openModal(url, isVideo) {
+        const overlay = document.getElementById('lightbox-overlay'), content = document.getElementById('lightbox-content');
+        content.innerHTML = ''; const mediaElement = document.createElement(isVideo ? 'video' : 'img');
+        mediaElement.src = url;
+        if (isVideo) {
+            mediaElement.controls = mediaElement.autoplay = true;
+            mediaElement.onerror = () => { content.innerHTML = `<div style="padding:2em;text-align:center;color:white;"><p>Video format not supported by this browser.</p><a href="${url}" download style="color:var(--accent-primary);">Download Video</a></div>`; };
+        }
+        content.appendChild(mediaElement); overlay.style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('lightbox-overlay').style.display = 'none'; document.getElementById('lightbox-content').innerHTML = ''; }
+    
+    function toggleMediaView() {
+        mediaViewMode = (mediaViewMode === 'media') ? 'filenames' : 'media';
+        loadSystem(document.getElementById('system-select').value);
+    }
+
+    // --- MODIFIED: Uses i18nData for dynamic button text ---
+    function updateToggleViewButtonText() {
+        const button = document.getElementById('toggle-view-btn');
+        if (!button) return;
+        const key = (mediaViewMode === 'media') ? 'toggle_view_filenames' : 'toggle_view_media';
+        button.textContent = i18nData[key] || (key === 'toggle_view_filenames' ? 'Show Filenames' : 'Show Media');
+    }
+
+    function createMediaCell(system, mediaPath, mediaExists, mediaType, isEnabled) {
+        const cell = document.createElement("td");
+
+        // Check if the media type is deactivated
+        if (!isEnabled) {
+            const deactivated = document.createElement('span');
+            deactivated.className = 'missing'; // Use same style for now
+            deactivated.textContent = i18nData.media_deactivated || 'Deactivated';
+            deactivated.style.opacity = '0.5';
+            cell.appendChild(deactivated);
+            return cell;
+        }
+
+        if (!mediaPath || !mediaExists) {
+            const missing = document.createElement('span');
+            missing.className = 'missing';
+            missing.textContent = 'MISSING';
+            cell.appendChild(missing);
+            return cell;
+        }
+        
+        let fullPath;
+        if (mediaPath.startsWith('/')) { fullPath = mediaPath; } 
+        else { fullPath = `/roms/${encodeURIComponent(system)}/${mediaPath.replace('./', '')}`; }
+        fullPath += `?t=${new Date().getTime()}`;
+        
+        if (mediaViewMode === 'filenames') {
+            const filenameSpan = document.createElement('span');
+            filenameSpan.textContent = mediaPath.split(/[\\/]/).pop();
+            cell.appendChild(filenameSpan);
+            return cell;
+        }
+        
+        const isVideo = mediaType === 'video';
+        const mediaElement = document.createElement("img");
+        mediaElement.className = "thumb lazy-load";
+        mediaElement.dataset.src = isVideo ? `/img/video_thumb.png?t=${new Date().getTime()}` : fullPath;
+        mediaElement.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        mediaElement.title = isVideo ? "Click to play video" : "Click to view image";
+        mediaElement.onerror = function() {
+            const missing = document.createElement('span'); missing.className = 'missing'; missing.textContent = 'MISSING';
+            if(this.parentNode) this.parentNode.replaceChild(missing, this);
+        };
+        mediaElement.onclick = (e) => { e.stopPropagation(); openModal(fullPath, isVideo); };
+        cell.appendChild(mediaElement);
+        return cell;
+    }
+
+    function setupLazyLoader() {
+        if (lazyLoadObserver) { lazyLoadObserver.disconnect(); }
+        if (mediaViewMode !== 'media') return;
+        const config = { rootMargin: '0px 0px 300px 0px', threshold: 0 };
+        lazyLoadObserver = new IntersectionObserver((entries, self) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target; img.src = img.dataset.src;
+                    img.classList.remove('lazy-load'); self.unobserve(img);
+                }
+            });
+        }, config);
+        document.querySelectorAll('.lazy-load').forEach(image => { lazyLoadObserver.observe(image); });
+    }
+    
+    function loadSystem(selectedSystem) {
+        sessionStorage.setItem('lastSelectedSystem', selectedSystem);
+        const roms = allSystemsRomData[selectedSystem] || [];
+        const tbody = document.createElement("tbody");
+
+        for (const rom of roms) {
+            const tr = document.createElement("tr");
+            tr.dataset.uniqueId = `${rom.actual_system}|${rom.rom_path}`;
+            
+            const tdCheck = document.createElement("td");
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.dataset.romPath = rom.rom_path;
+            checkbox.dataset.system = rom.actual_system;
+            tdCheck.appendChild(checkbox);
+
+            const tdRom = document.createElement("td");
+            tdRom.className = "rom-name-cell";
+            
+            const romStem = getRomFilenameStem(rom.rom_path);
+            const romFilenameSpan = document.createElement("span");
+            romFilenameSpan.textContent = romStem;
+            tdRom.appendChild(romFilenameSpan);
+
+            if (rom.game_name) {
+                const gameNameDiv = document.createElement("div");
+                gameNameDiv.textContent = rom.game_name;
+                gameNameDiv.className = "game-name-sub";
+                tdRom.appendChild(gameNameDiv);
+            }
+
+            const lastSlashIndex = rom.rom_path.lastIndexOf('/');
+            const directoryPath = lastSlashIndex > -1 ? rom.rom_path.substring(0, lastSlashIndex + 1) : './';
+            const systemPathDiv = document.createElement("div");
+            systemPathDiv.textContent = `${rom.actual_system} - dir: ${directoryPath}`;
+            systemPathDiv.className = "game-name-sub"; 
+            systemPathDiv.style.opacity = '0.7'; 
+            tdRom.appendChild(systemPathDiv);
+            
+            tr.append(tdCheck, tdRom);
+            
+            // Use the global activeSettings to determine the state
+            tr.appendChild(createMediaCell(rom.actual_system, rom.image_path, rom.image_exists, 'image', activeSettings.scrape_image !== false));
+            tr.appendChild(createMediaCell(rom.actual_system, rom.video_path, rom.video_exists, 'video', activeSettings.scrape_video !== false));
+            tr.appendChild(createMediaCell(rom.actual_system, rom.marquee_path, rom.marquee_exists, 'marquee', activeSettings.scrape_marquee !== false));
+            tr.appendChild(createMediaCell(rom.actual_system, rom.thumbnail_path, rom.thumbnail_exists, 'thumbnail', activeSettings.scrape_thumbnail !== false));
+            tbody.appendChild(tr);
+        }
+
+        const table = document.createElement("table");
+        table.id = "roms";
+        if (mediaViewMode === 'filenames') {
+            table.classList.add('filenames-view');
+        }
+        const thead = document.createElement("thead");
+        thead.innerHTML = `<tr>
+            <th><input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this.checked)"></th>
+            <th onclick="sortTableByName()" style="cursor: pointer;"><span>Name</span></th>
+            <th><div style="display: inline-flex; align-items: center; gap: 0.5em;"><span>Image</span><input type="checkbox" id="toggle-image" data-type="image" onchange="toggleMediaType(this)" data-i18n-title="media_toggle_tooltip"></div></th>
+            <th><div style="display: inline-flex; align-items: center; gap: 0.5em;"><span>Video</span><input type="checkbox" id="toggle-video" data-type="video" onchange="toggleMediaType(this)" data-i18n-title="media_toggle_tooltip"></div></th>
+            <th><div style="display: inline-flex; align-items: center; gap: 0.5em;"><span>Logo</span><input type="checkbox" id="toggle-marquee" data-type="marquee" onchange="toggleMediaType(this)" data-i18n-title="media_toggle_tooltip"></div></th>
+            <th><div style="display: inline-flex; align-items: center; gap: 0.5em;"><span>Box</span><input type="checkbox" id="toggle-thumbnail" data-type="thumbnail" onchange="toggleMediaType(this)" data-i18n-title="media_toggle_tooltip"></div></th>
+        </tr>`;
+        table.append(thead, tbody);
+
+        document.getElementById("rom-table").innerHTML = '';
+        document.getElementById("rom-table").appendChild(table);
+
+        setupLazyLoader();
+        filterTable();
+        updateSelectAllCheckbox();
+        loadSettings(); // This call updates the UI controls after the table is drawn
+        applyTranslations();
+    }
+    
+    function filterMissing() {
+        const selectedSystem = document.getElementById("system-select").value;
+        if (!selectedSystem || !allSystemsRomData[selectedSystem]) return;
+        const roms = allSystemsRomData[selectedSystem];
+        const missingRoms = roms.filter(rom => {
+            if (activeSettings.scrape_image !== false && (!rom.image_path || !rom.image_exists)) return true;
+            if (activeSettings.scrape_video !== false && (!rom.video_path || !rom.video_exists)) return true;
+            if (activeSettings.scrape_marquee !== false && (!rom.marquee_path || !rom.marquee_exists)) return true;
+            if (activeSettings.scrape_thumbnail !== false && (!rom.thumbnail_path || !rom.thumbnail_exists)) return true;
+            return false;
+        });
+        const missingUniqueIds = new Set(missingRoms.map(r => `${r.actual_system}|${r.rom_path}`));
+        document.querySelectorAll("#roms tbody tr").forEach(row => {
+            row.style.display = missingUniqueIds.has(row.dataset.uniqueId) ? "" : "none";
+        });
+        document.getElementById("filter").value = "";
+        updateSelectAllCheckbox();
+        setupLazyLoader();
+    }
+
+    function filterTable(val = null) {
+        const inputVal = (val === null) ? document.getElementById("filter").value : val;
+        sessionStorage.setItem('lastFilterText', inputVal);
+        const filterText = inputVal.toLowerCase();
+        document.querySelectorAll("#roms tbody tr").forEach(row => {
+            const romName = row.cells[1].querySelector("span").textContent.toLowerCase();
+            const gameName = (row.cells[1].querySelector(".game-name-sub")?.textContent || '').toLowerCase();
+            row.style.display = (romName.includes(filterText) || gameName.includes(filterText)) ? "" : "none";
+        });
+        updateSelectAllCheckbox();
+        setupLazyLoader();
+    }
+
+    function toggleSelectAll(checked) { document.querySelectorAll("#roms tbody tr:not([style*='display: none']) input[type=checkbox]").forEach(cb => { cb.checked = checked; }); updateSelectAllCheckbox(); }
+    function updateSelectAllCheckbox() {
+        const allVisible = document.querySelectorAll("#roms tbody tr:not([style*='display: none']) input[type=checkbox]");
+        const checkedVisible = document.querySelectorAll("#roms tbody tr:not([style*='display: none']) input[type=checkbox]:checked");
+    
+        // Update the scrape button counter
+        const counterSpan = document.getElementById('scrape-counter');
+        if (checkedVisible.length > 0) {
+            counterSpan.textContent = `(${checkedVisible.length})`;
+        } else {
+            counterSpan.textContent = '';
+        }
+
+        document.getElementById("diagnose-rom-btn").disabled = checkedVisible.length !== 1;
+    
+        const selectAll = document.getElementById("select-all-checkbox");
+        if (selectAll) { // Check if the element exists
+            if (allVisible.length === 0) { 
+                selectAll.checked = selectAll.indeterminate = false; 
+            } else { 
+                selectAll.checked = checkedVisible.length === allVisible.length; 
+                selectAll.indeterminate = checkedVisible.length > 0 && checkedVisible.length < allVisible.length; 
+            }
+        }
+    }
+    function clearAllSelections() { document.querySelectorAll("#roms tbody input[type=checkbox]:checked").forEach(cb => { cb.checked = false; }); updateSelectAllCheckbox(); }
+    function refreshTable() { sessionStorage.clear(); fetch("/get-system-data").then(res => res.json()).then(data => { allSystemsRomData = data; const select = document.getElementById('system-select'); const currentSystem = select.value; loadSystem(currentSystem); document.getElementById("logbox").textContent += `\nTable refreshed successfully.`; }).catch(err => { document.getElementById("logbox").textContent += `\nError refreshing table: ${err.message}`; }); }
+    function startScrape() {
+        const ssid = document.getElementById("ssid").value.trim();
+        const sspassword = document.getElementById("sspassword").value.trim();
+        if (!ssid || !sspassword) { return alert("Please enter your Screenscraper.fr username and password in the settings before scraping."); }
+        if (scrapeInProgress) return;
+        const checked = Array.from(document.querySelectorAll("#roms tbody input[type=checkbox]:checked"));
+        if (checked.length === 0) return alert("No ROMs selected.");
+        scrapeInProgress = true; updateButtonStates(true);
+        const toScrape = checked.map(cb => { cb.closest("tr").classList.add("scraping"); return { rom_path: cb.dataset.romPath, actual_system: cb.dataset.system }; });
+        fetch("/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ roms_to_scrape_data: toScrape }) })
+            .then(res => res.ok ? res.json() : Promise.reject(new Error("Failed to start")))
+            .then(() => { document.getElementById("logbox").textContent = "Scraping started...\n"; fetchLogRepeatedly(); })
+            .catch(err => { document.getElementById("logbox").textContent += `\n${err.message}`; scrapeInProgress = false; updateButtonStates(false); });
+    }
+    function stopScrape() { if (!scrapeInProgress) return; fetch("/stop-scrape", { method: "POST" }).then(res => res.json()).then(data => { document.getElementById("logbox").textContent += `\nStop request sent: ${data.status}`; }).catch(err => { document.getElementById("logbox").textContent += `\nError sending stop request: ${err.message}`; }); }
+    function updateButtonStates(isScraping) {
+        document.querySelectorAll('.button, .table-controls select, .table-controls input').forEach(el => { const isStopBtn = el.id === 'stop-scrape-btn'; el.disabled = isScraping ? !isStopBtn : isStopBtn; });
+        if (!isScraping) updateSelectAllCheckbox();
+    }
+    function fetchLogRepeatedly() {
+        if (logFetchIntervalId) clearTimeout(logFetchIntervalId);
+        fetch(`/log?_=${new Date().getTime()}`).then(res => res.text()).then(data => {
+            const logbox = document.getElementById("logbox");
+            if (logbox.textContent !== data) { logbox.textContent = data; logbox.scrollTop = logbox.scrollHeight; }
+            if (data.includes("Scraping complete.") || data.includes("interrupted by user")) {
+                if (scrapeInProgress) {
+                    scrapeInProgress = false; updateButtonStates(false);
+                    document.querySelectorAll("#roms tbody tr.scraping").forEach(row => { row.classList.remove("scraping"); row.querySelector("input[type=checkbox]").checked = false; });
+                    updateSelectAllCheckbox();
+                }
+            }
+            logFetchIntervalId = setTimeout(fetchLogRepeatedly, 2000);
+        }).catch(err => { document.getElementById("logbox").textContent += `\nError fetching log: ${err.message}`; scrapeInProgress = false; updateButtonStates(false); if (logFetchIntervalId) clearTimeout(logFetchIntervalId); });
+    }
+    function diagnoseRom() { const checked = document.querySelector("#roms tbody input[type=checkbox]:checked"); if (checked) window.location.href = `diagnose.html?romPath=${encodeURIComponent(checked.dataset.romPath)}&system=${encodeURIComponent(checked.dataset.system)}`; }
+    function toggleMediaType(checkbox) {
+        const settings = {};
+        const type = checkbox.dataset.type;
+        const isChecked = checkbox.checked;
+        settings[`scrape_${type}`] = isChecked;
+        
+        // Update the global settings variable immediately
+        activeSettings[`scrape_${type}`] = isChecked;
+
+        fetch("/save-settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(settings)
+        }).then(res => {
+            if (res.ok) {
+                // Reload the table; it will now use the updated global settings
+                loadSystem(document.getElementById('system-select').value);
+            } else {
+                alert('Failed to save setting.');
+                // Revert the checkbox on failure
+                checkbox.checked = !isChecked;
+                activeSettings[`scrape_${type}`] = !isChecked;
+            }
+        });
+    }
+    function saveAllSettings(isLoginCheck = false) {
+        const logbox = document.getElementById("logbox");
+        if (isLoginCheck) logbox.textContent = i18nData.log_saving_and_testing || "[SETTINGS] Saving credentials and performing login test...";
+        fetch("/save-settings", { method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ssid: document.getElementById("ssid").value, sspassword: document.getElementById("sspassword").value, language: document.getElementById("scraper-lang-select").value,
+                force: document.getElementById("toggle-force").classList.contains("active"), force_metadata: document.getElementById("toggle-force-metadata").classList.contains("active"), 
+                removestockpics: document.getElementById("toggle-removestockpics").classList.contains("active"), perform_login_check: isLoginCheck
+            })
+        }).then(res => res.ok ? res.json() : Promise.reject(new Error("Save failed"))).then(json => {
+            if (isLoginCheck) { logbox.textContent = `[LOGIN TEST] ${json.login_test || 'No response.'}`; }
+        }).catch(err => { logbox.textContent += `\nError saving settings: ${err.message}`; });
+    }
+    function loadSettings() {
+        // This function now fetches settings and populates the global variable and the UI controls
+        return fetch("/get-settings")
+            .then(res => res.ok ? res.json() : Promise.reject(new Error("Load failed")))
+            .then(data => {
+                activeSettings = data; // Store settings globally
+
+                // Update UI controls
+                document.getElementById("ssid").value = data.ssid || ""; 
+                document.getElementById("sspassword").value = data.sspassword || "";
+                
+                const scraperLangSelect = document.getElementById("scraper-lang-select");
+                if(data.language && [...scraperLangSelect.options].some(o => o.value === data.language)) {
+                    scraperLangSelect.value = data.language;
+                }
+                
+                document.getElementById("toggle-force").classList.toggle("active", data.force === true);
+                document.getElementById("toggle-force-metadata").classList.toggle("active", data.force_metadata === true);
+                document.getElementById("toggle-removestockpics").classList.toggle("active", data.removestockpics === true);
+
+                // Set media type checkboxes if they exist
+                const toggleImage = document.getElementById("toggle-image");
+                if (toggleImage) {
+                    toggleImage.checked = data.scrape_image !== false;
+                    document.getElementById("toggle-video").checked = data.scrape_video !== false;
+                    document.getElementById("toggle-marquee").checked = data.scrape_marquee !== false;
+                    document.getElementById("toggle-thumbnail").checked = data.scrape_thumbnail !== false;
+                }
+            }).catch(err => { 
+                document.getElementById("logbox").textContent += `\nError loading settings: ${err.message}`; 
+            });
+    }
+
+    let sortDirection = 'asc'; // 'asc' for ascending, 'desc' for descending
+
+    function sortTableByName() {
+        const table = document.getElementById('roms');
+        if (!table) return;
+
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        // Sort the rows based on the ROM name
+        rows.sort((a, b) => {
+            const nameA = a.cells[1].querySelector("span").textContent.toLowerCase();
+            const nameB = b.cells[1].querySelector("span").textContent.toLowerCase();
+
+            if (nameA < nameB) {
+                return sortDirection === 'asc' ? -1 : 1;
+            }
+            if (nameA > nameB) {
+                return sortDirection === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+
+        // Re-append the sorted rows to the table
+        rows.forEach(row => tbody.appendChild(row));
+
+        // Toggle the sort direction for the next click
+        sortDirection = (sortDirection === 'asc') ? 'desc' : 'asc';
+    }
+	
+    async function checkForUpdates(isManual = false) {
+        const displayBtn = document.getElementById('version-display-btn');
+        const checkBtn = document.getElementById('update-check-btn');
+        
+        // Set button to "checking" state
+        displayBtn.textContent = i18nData.update_checking || 'Checking...';
+        displayBtn.classList.remove('button-success', 'button-danger', 'active');
+        displayBtn.disabled = true;
+        checkBtn.disabled = true;
+
+        try {
+            const response = await fetch('/check-update');
+            if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
+            const data = await response.json();
+
+            if (data.update_available) {
+                displayBtn.textContent = `New: ${data.remote_version}`;
+                displayBtn.classList.add('button-primary'); 
+                displayBtn.title = "A new version is available on GitHub. Please update your Overlay package.";
+                displayBtn.onclick = null; // Klick deaktivieren
+                displayBtn.disabled = false; // Button sichtbar lassen
+            } else {
+                // No update available, show the current version
+                displayBtn.textContent = data.local_version;
+                displayBtn.classList.add('active'); 
+                if (isManual) {
+                    logbox.textContent += `\n[INFO] You are running the latest version.`;
+                }
+            }
+        } catch (error) {
+            // Handle cases where the check fails
+            displayBtn.textContent = 'Update Check Failed';
+            displayBtn.classList.add('button-danger');
+            if (isManual) {
+                 logbox.textContent += `\n[ERROR] Update check failed: ${error.message}`;
+            }
+        } finally {
+            // Re-enable the manual check button
+            checkBtn.disabled = false;
+        }
+    }
+
+</script>
+</body>
+</html>

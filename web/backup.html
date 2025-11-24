@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title data-i18n="page_title_backup">Gamelist Backups</title>
+    <style>
+        :root{--bg-deep-dark:#121821;--bg-dark:#1a222e;--bg-light:#2c3a4b;--accent-primary:#00bcd4;--accent-secondary:#0097a7;--text-light:#e0e7ff;--text-medium:#a0a8b4;--text-dark:#121821;--border-color:#3a4a5f;--success-color:#4caf50;--error-color:#f44336;--font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Roboto',sans-serif}
+        body{font-family:var(--font-family);margin:0;background-color:var(--bg-deep-dark);color:var(--text-light);padding:2rem}
+        .container{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:2rem}
+        .panel-box{background-color:var(--bg-dark);border:1px solid var(--border-color);border-radius:12px;padding:1.5rem}
+        .panel-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-color);padding-bottom:1rem;margin-bottom:1.5rem}
+        h1,h2{color:var(--accent-primary);margin:0}
+        .button{padding:.75rem 1.25rem;border:none;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;text-align:center;text-decoration:none;display:inline-block}.button-primary{background-color:var(--accent-primary);color:var(--text-dark)}.button-secondary{background-color:var(--bg-light);color:var(--text-light)}.button-danger{background-color:var(--error-color);color:var(--text-light)}
+        input[type="text"]{width:100%;padding:.6rem;background-color:var(--bg-deep-dark);border:1px solid var(--border-color);border-radius:6px;color:var(--text-light);font-size:.9rem;margin-top:.5rem}
+        #backup-list ul{list-style:none;padding:0;margin:0}.backup-item{background-color:var(--bg-light);padding:1rem;border-radius:8px;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}.backup-item-name{font-weight:600}
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:1000;backdrop-filter:blur(5px);visibility:hidden;opacity:0;transition:visibility 0s .2s,opacity .2s}
+        .modal-overlay.visible{visibility:visible;opacity:1;transition:visibility 0s 0s,opacity .2s}
+        .modal-content{background:var(--bg-dark);padding:2rem;border-radius:12px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto}.system-list{display:block;max-height:40vh;overflow-y:auto;border:1px solid var(--border-color);padding:1rem;margin:1rem 0;border-radius:8px}.system-list label{display:block;margin-bottom:.5rem}
+        .modal-actions{display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem}
+        #ui-lang-select { background-color:var(--bg-light); border:1px solid var(--border-color); color:var(--text-light); border-radius:6px; padding:0.25rem 0.5rem; font-size:0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel-box">
+            <div class="panel-header">
+                <h1 data-i18n="backup_page_title"></h1>
+                <div>
+                    <select id="ui-lang-select" title="Select UI Language"><option value="en">English (UI)</option><option value="de">German (UI)</option><option value="fr">Français (UI)</option><option value="es">Español (UI)</option><option value="it">Italiano (UI)</option><option value="sv">Svenska (UI)</option></select>
+                    <a href="index.html" class="button button-secondary" data-i18n="back_to_scraper_button" data-i18n-title="back_to_scraper_tooltip" style="margin-left: 1rem;"></a>
+                </div>
+            </div>
+            <div>
+                <h2 data-i18n="create_backup_title"></h2>
+                <p data-i18n="create_backup_desc"></p>
+                <input type="text" id="backup-name-input" data-i18n-placeholder="backup_name_placeholder">
+                <button onclick="createBackup()" class="button button-primary" style="margin-top: 1rem;" data-i18n="create_backup_button" data-i18n-title="create_backup_tooltip"></button>
+            </div>
+        </div>
+
+        <div class="panel-box">
+            <div class="panel-header">
+                <h2 data-i18n="existing_backups_title"></h2>
+            </div>
+            <div id="backup-list">
+                <p data-i18n="loading_backups_text"></p>
+            </div>
+        </div>
+
+        <pre id="log" style="background:var(--bg-dark);padding:1rem;border-radius:8px;min-height:100px;overflow-y:auto;"></pre>
+    </div>
+
+    <div id="restore-modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 id="restore-modal-title"></h2>
+            <p data-i18n="restore_modal_desc"></p>
+            <div class="system-list" id="restore-system-list"></div>
+            <div class="modal-actions">
+                <button onclick="closeModal()" class="button button-secondary" data-i18n="cancel_button" data-i18n-title="cancel_button_tooltip"></button>
+                <button id="confirm-restore-btn" class="button button-danger" data-i18n="confirm_restore_button" data-i18n-title="confirm_restore_tooltip"></button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let i18nData = {};
+    const backupListEl = document.getElementById('backup-list');
+    const backupNameInput = document.getElementById('backup-name-input');
+    const logEl = document.getElementById('log');
+    const restoreModal = document.getElementById('restore-modal');
+    const restoreSystemList = document.getElementById('restore-system-list');
+    const restoreModalTitle = document.getElementById('restore-modal-title');
+    const confirmRestoreBtn = document.getElementById('confirm-restore-btn');
+
+    async function fetchLanguage(lang) {
+        try {
+            const response = await fetch(`/lang/${lang}.json?v=${new Date().getTime()}`);
+            if (!response.ok) throw new Error(`Language file for '${lang}' not found.`);
+            i18nData = await response.json();
+            localStorage.setItem('preferred_language', lang);
+            document.documentElement.lang = lang;
+            document.getElementById('ui-lang-select').value = lang;
+            applyTranslations();
+        } catch (error) {
+            console.error(error.message);
+            if (lang !== 'en') { console.warn(`Falling back to English.`); await fetchLanguage('en'); }
+        }
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.dataset.i18n; if (i18nData[key]) el.textContent = i18nData[key]; });
+        document.querySelectorAll('[data-i18n-title]').forEach(el => { const key = el.dataset.i18nTitle; if (i18nData[key]) el.title = i18nData[key]; });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.dataset.i18nPlaceholder; if (i18nData[key]) el.placeholder = i18nData[key]; });
+        document.title = i18nData.page_title_backup || 'Gamelist Backups';
+        if(backupListEl.querySelector('ul')) loadBackups(); 
+    }
+
+    function log(message, isError = false) {
+        console.log(message);
+        const prefix = isError ? (i18nData.log_error_prefix || '[ERROR]') : (i18nData.log_info_prefix || '[INFO]');
+        logEl.textContent = `${prefix} ${message}\n${logEl.textContent}`;
+    }
+
+    async function apiCall(endpoint, options = {}) {
+        try {
+            const response = await fetch(endpoint, options);
+            const data = await response.json();
+            if (!response.ok) { throw new Error(data.error || `HTTP error! Status: ${response.status}`); }
+            return data;
+        } catch (error) {
+            log(error.message, true);
+            throw error;
+        }
+    }
+
+    async function loadBackups() {
+        try {
+            const backups = await apiCall('/list-backups');
+            backupListEl.innerHTML = ''; 
+            if (backups.length === 0) {
+                backupListEl.innerHTML = `<p>${i18nData.no_backups_found_text || 'No backups found.'}</p>`;
+                return;
+            }
+            const ul = document.createElement('ul');
+            backups.forEach(backupName => {
+                const li = document.createElement('li');
+                li.className = 'backup-item';
+                const restoreButtonText = i18nData.restore_button || 'Restore';
+                const restoreButtonTooltip = i18nData.restore_button_tooltip || 'Restore from this backup';
+                li.innerHTML = `
+                    <span class="backup-item-name">${backupName}</span>
+                    <div>
+                        <button onclick="showRestoreModal('${backupName}')" class="button button-primary" title="${restoreButtonTooltip}">${restoreButtonText}</button>
+                    </div>`;
+                ul.appendChild(li);
+            });
+            backupListEl.appendChild(ul);
+        } catch (error) {
+            backupListEl.innerHTML = `<p style="color:var(--error-color);">${i18nData.log_load_fail || 'Failed to load backups.'}</p>`;
+        }
+    }
+
+    async function createBackup() {
+        const backupName = backupNameInput.value.trim();
+        const logMsg = (i18nData.log_creating_backup || "Creating backup with name: '{name}'...").replace('{name}', backupName || 'timestamp');
+        log(logMsg);
+        try {
+            const result = await apiCall('/create-backup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ backup_name: backupName }) });
+            log((i18nData.log_create_success || "Successfully created backup: {name}").replace('{name}', result.backup_name));
+            backupNameInput.value = '';
+            await loadBackups();
+        } catch (error) {}
+    }
+
+    async function showRestoreModal(backupName) {
+        log((i18nData.log_fetch_details || "Fetching details for backup: {name}...").replace('{name}', backupName));
+        try {
+            const systems = await apiCall(`/get-backup-details?backup_name=${encodeURIComponent(backupName)}`);
+            restoreModalTitle.textContent = (i18nData.restore_modal_title || "Restore from: {name}").replace('{name}', backupName);
+            const allSystemsLabel = i18nData.restore_all_systems_label || 'All Systems';
+            restoreSystemList.innerHTML = `<label><input type="checkbox" id="restore-all-systems-cb" onchange="toggleAllSystems(this.checked)"> <strong>${allSystemsLabel}</strong></label><hr>`;
+            systems.forEach(system => {
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" class="system-cb" value="${system}"> ${system}`;
+                restoreSystemList.appendChild(label);
+            });
+            confirmRestoreBtn.onclick = () => executeRestore(backupName);
+            restoreModal.classList.add('visible');
+        } catch (error) {}
+    }
+
+    async function executeRestore(backupName) {
+        const selectedSystems = Array.from(document.querySelectorAll('.system-cb:checked')).map(cb => cb.value);
+        if (selectedSystems.length === 0) {
+            log(i18nData.log_no_systems_selected || 'No systems selected for restore.', true);
+            return;
+        }
+        const systemsStr = selectedSystems.join(', ');
+        log((i18nData.log_starting_restore || "Starting restore of {systems} from backup '{name}'...").replace('{systems}', systemsStr).replace('{name}', backupName));
+        try {
+            const result = await apiCall('/restore-backup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ backup_name: backupName, systems_to_restore: selectedSystems }) });
+            log((i18nData.log_restore_complete || "Restore complete. Restored systems: {systems}").replace('{systems}', result.restored_systems.join(', ')));
+            closeModal();
+        } catch (error) {}
+    }
+    
+    function closeModal() { restoreModal.classList.remove('visible'); }
+    function toggleAllSystems(isChecked) { document.querySelectorAll('.system-cb').forEach(cb => cb.checked = isChecked); }
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+        const preferredLang = localStorage.getItem('preferred_language') || 'en';
+        document.getElementById('ui-lang-select').addEventListener('change', (e) => fetchLanguage(e.target.value));
+        await fetchLanguage(preferredLang);
+        await loadBackups();
+    });
+</script>
+</body>
+</html>

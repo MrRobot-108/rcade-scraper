@@ -1,0 +1,357 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title data-i18n="page_title_diagnose">Deep Scrape</title>
+    <style>
+        :root {
+            --bg-deep-dark: #121821; --bg-dark: #1a222e; --bg-light: #2c3a4b; --accent-primary: #00bcd4; --accent-secondary: #0097a7;
+            --text-light: #e0e7ff; --text-medium: #a0a8b4; --text-dark: #121821; --border-color: #3a4a5f; --success-color: #4caf50;
+            --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        html { font-size: 16px; }
+        body { font-family: var(--font-family); margin: 0; background-color: var(--bg-deep-dark); color: var(--text-light); padding: 2rem; display: flex; flex-direction: column; align-items: center; }
+        .page-header { width: 100%; max-width: 1400px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .page-header h1 { color: var(--accent-primary); margin: 0; }
+        .header-branding { display: flex; align-items: center; gap: 1rem; font-size: 0.8rem; color: var(--text-medium); }
+        #ui-lang-select { background-color: var(--bg-light); border: 1px solid var(--border-color); color: var(--text-light); border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+        .main-grid-container { display: grid; grid-template-columns: 400px 1fr; gap: 1.5rem; width: 100%; max-width: 1400px; }
+        .left-column { display: flex; flex-direction: column; gap: 1.5rem; }
+        .right-column { display: flex; flex-direction: column; min-width: 0; }
+        .panel-box { background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; }
+        .panel-header { margin: -1.5rem -1.5rem 1.5rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .panel-header h2 { margin: 0; font-size: 1.1rem; }
+        .input-group { margin-bottom: 1rem; }
+        .input-group label { font-size: 0.8rem; color: var(--text-medium); display: block; margin-bottom: 0.25rem; }
+        .input-group input, .input-group select, .input-group span { width: 100%; padding: 0.6rem; background-color: var(--bg-deep-dark); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-light); font-size: 0.9rem; min-height: calc(1.8rem + 2px); display: flex; align-items: center; box-sizing: border-box; }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .comparison-grid h3 { text-align: center; color: var(--text-medium); margin-top: 0; font-size: 1rem; }
+        .media-box { background-color: var(--bg-light); border-radius: 8px; padding: 1rem; text-align: center; display: flex; flex-direction: column; gap: 1rem; }
+        .media-box h4 { margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-primary); }
+        .media-box img, .media-box video { max-width: 100%; max-height: 160px; height: auto; width: auto; object-fit: contain; border-radius: 6px; background-color: var(--bg-deep-dark); cursor: pointer; margin: 0 auto; }
+        .missing { color: #f44336; font-weight: bold; height: 160px; display: flex; align-items: center; justify-content: center; }
+        .button { padding: 0.75rem 1.25rem; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; width: 100%; }
+        .button:disabled { cursor: not-allowed; opacity: 0.5; }
+        .button-primary { background-color: var(--accent-primary); color: #121821; }
+        .button-success { background-color: var(--success-color); color: white; }
+        #action-buttons { display: flex; flex-direction: column; gap: 1rem; }
+        #logbox { background-color: var(--bg-deep-dark); color: #4ade80; font-family: 'Fira Code', monospace; font-size: 0.85rem; padding: 1rem; border-radius: 8px; flex-grow: 1; overflow-y: auto; white-space: pre-wrap; border: 1px solid var(--border-color); }
+        .back-button { width: auto !important; }
+        #lightbox-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        #lightbox-content { position: relative; max-width: 80vw; max-height: 80vh; }
+        #lightbox-close { position: absolute; top: -40px; right: 0; font-size: 2.5rem; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="lightbox-overlay" onclick="closeModal()"><span id="lightbox-close" onclick="closeModal()">&times;</span><div id="lightbox-content" onclick="event.stopPropagation()"></div></div>
+    <div class="page-header">
+        <h1 data-i18n="diagnose_title"></h1>
+        <div class="header-branding">
+             <select id="ui-lang-select" title="Select UI Language">
+                <option value="en">English (UI)</option>
+                <option value="de">German (UI)</option>
+                <option value="fr">Français (UI)</option>
+                <option value="es">Español (UI)</option>
+                <option value="it">Italiano (UI)</option>
+                <option value="sv">Svenska (UI)</option>
+            </select>
+            <a href="index.html" class="button button-primary back-button" onclick="event.preventDefault(); goBackAndCleanup();" data-i18n="back_to_dashboard_button" data-i18n-title="back_to_dashboard_button_tooltip"></a>
+        </div>
+    </div>
+    <div class="main-grid-container">
+        <div class="left-column">
+            <div class="panel-box">
+                <div class="panel-header"><h2 data-i18n="original_data_title">1. Original Game Data</h2></div>
+                <div class="input-group"><label data-i18n="original_system_label"></label><span id="original-system-display">N/A</span></div>
+                <div class="input-group"><label data-i18n="original_rom_label"></label><span id="rom-filename-display">N/A</span></div>
+            </div>
+            <div class="panel-box">
+                <div class="panel-header"><h2 data-i18n="scraper_config_title">2. Scraper Configuration</h2></div>
+                <div class="input-group"><label for="system-select-preview" data-i18n="scrape_using_system_label"></label><select id="system-select-preview"></select></div>
+                <div class="input-group"><label for="rom-name-input" data-i18n="scrape_using_name_label"></label><input type="text" id="rom-name-input" data-i18n-placeholder="editable_rom_name_placeholder"></div>
+            </div>
+            <div class="panel-box">
+                <div class="panel-header"><h2 data-i18n="actions_title">3. Actions</h2></div>
+                <div id="action-buttons">
+                    <button id="start-scrape-btn" class="button button-primary" data-i18n="fetch_preview_button" data-i18n-title="fetch_preview_button_tooltip"></button>
+                    <button id="confirm-scrape-btn" class="button button-success" disabled data-i18n="confirm_save_button" data-i18n-title="confirm_save_button_tooltip"></button>
+                </div>
+            </div>
+             <div class="panel-box" style="flex-grow: 1; display:flex; flex-direction:column;"><div class="panel-header"><h2 data-i18n="log_title">Live Log</h2></div><pre id="logbox"></pre></div>
+        </div>
+        <div class="right-column">
+            <div class="panel-box" style="flex-grow: 1;">
+                <div class="panel-header"><h2 data-i18n="media_comparison_title">4. Media Comparison</h2></div>
+                <div id="media-comparison-container" class="comparison-grid">
+                    <div><h3 data-i18n="current_media_header"></h3></div>
+                    <div><h3 data-i18n="new_media_header"></h3></div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+    // --- Global variables ---
+    let i18nData = {};
+    const params = new URLSearchParams(window.location.search);
+    const romPathFromUrl = params.get('romPath');
+    const systemNameFromUrl = params.get('system');
+    
+    // Cache DOM elements for performance
+    const el = {
+        romNameInput: document.getElementById('rom-name-input'),
+        systemSelect: document.getElementById('system-select-preview'),
+        startBtn: document.getElementById('start-scrape-btn'),
+        confirmBtn: document.getElementById('confirm-scrape-btn'),
+        logbox: document.getElementById('logbox'),
+        origSystem: document.getElementById('original-system-display'),
+        romFilename: document.getElementById('rom-filename-display'),
+        comparisonContainer: document.getElementById('media-comparison-container')
+    };
+    
+    let diagnoseSessionId = null;
+
+    // --- Main entry point when the page is ready ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- MODIFIED: Set critical display text IMMEDIATELY ---
+        // This data comes directly from the URL, so there's no need to wait.
+        // This should fix the "N/A" race condition.
+        if (romPathFromUrl && systemNameFromUrl) {
+            el.origSystem.textContent = systemNameFromUrl;
+            el.romFilename.textContent = romPathFromUrl.split(/[\\/]/).pop();
+            el.romNameInput.value = getRomStem(romPathFromUrl);
+        } else {
+            el.logbox.textContent = "ERROR: No ROM file or system specified in URL.";
+            return;
+        }
+
+        // Now, start all asynchronous operations (loading data from server)
+        initializePage();
+    });
+
+    // --- Asynchronous initialization function ---
+    async function initializePage() {
+        const preferredLang = localStorage.getItem('preferred_language') || 'en';
+        await fetchLanguage(preferredLang); // Load translations
+
+        el.logbox.textContent = i18nData.log_waiting_diagnose || "Adjust settings and click 'Fetch Preview'.";
+        el.startBtn.addEventListener('click', startDiagnoseScrape);
+        el.confirmBtn.addEventListener('click', confirmScrape);
+        document.getElementById('ui-lang-select').addEventListener('change', (e) => fetchLanguage(e.target.value));
+    
+        await loadSystemIdMap(); // Load system IDs for the dropdown
+        el.systemSelect.value = systemNameFromUrl; // Set dropdown to the correct system
+
+        // Fetch initial data and render the comparison view
+        let romDetails = {};
+        try {
+            const romDetailsRes = await fetch(`/get-rom-details?romPath=${encodeURIComponent(romPathFromUrl)}&system=${encodeURIComponent(systemNameFromUrl)}`);
+            if (romDetailsRes.ok) romDetails = await romDetailsRes.json();
+        } catch (e) {
+            console.error("Could not fetch initial ROM details:", e);
+        }
+        
+        // Restore session or render initial view
+        const savedSessionId = sessionStorage.getItem('diagnoseSessionId');
+        if (savedSessionId && sessionStorage.getItem('diagnoseRomPath') === romPathFromUrl) {
+            diagnoseSessionId = savedSessionId;
+            const tempFiles = JSON.parse(sessionStorage.getItem('tempMediaFiles') || '[]');
+            el.systemSelect.value = sessionStorage.getItem('diagnoseSystemName') || systemNameFromUrl;
+            el.romNameInput.value = sessionStorage.getItem('diagnoseRomName') || getRomStem(romPathFromUrl);
+            renderComparisonView(romDetails, tempFiles);
+            if (tempFiles.length > 0) el.confirmBtn.disabled = false;
+        } else {
+            renderComparisonView(romDetails);
+        }
+    }
+
+    // --- Helper and Logic Functions ---
+    function getRomStem(path) { return path ? path.split(/[\\/]/).pop().split('.').slice(0, -1).join('.') : ''; }
+
+    async function fetchLanguage(lang) {
+        try {
+            const response = await fetch(`/lang/${lang}.json?v=${new Date().getTime()}`);
+            if (!response.ok) throw new Error(`Language file for '${lang}' not found.`);
+            i18nData = await response.json();
+            localStorage.setItem('preferred_language', lang);
+            document.documentElement.lang = lang;
+            document.getElementById('ui-lang-select').value = lang;
+            applyTranslations();
+        } catch (error) {
+            console.error(error.message);
+            if (lang !== 'en') { console.warn(`Falling back to English.`); await fetchLanguage('en'); }
+        }
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(elem => { const key = elem.dataset.i18n; if (i18nData[key]) elem.textContent = i18nData[key]; });
+        document.querySelectorAll('[data-i18n-title]').forEach(elem => { const key = elem.dataset.i18nTitle; if (i18nData[key]) elem.title = i18nData[key]; });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(elem => { const key = elem.dataset.i18nPlaceholder; if (i18nData[key]) elem.placeholder = i18nData[key]; });
+        document.title = i18nData.page_title_diagnose || 'Deep Scrape';
+    }
+    
+    async function loadSystemIdMap() {
+        try {
+            const response = await fetch('/get-system-id-map');
+            const systemIdMap = await response.json();
+            el.systemSelect.innerHTML = '<option value="">-- Select System --</option>';
+            Object.keys(systemIdMap).sort().forEach(key => { if (key) el.systemSelect.add(new Option(key, key)); });
+        } catch (error) { el.logbox.textContent += `\nError loading system ID map: ${error.message}`; }
+    }
+
+    function renderComparisonView(romDetails = {}, newFiles = []) {
+        const headers = `<div><h3 data-i18n="current_media_header">Current</h3></div><div><h3 data-i18n="new_media_header">New</h3></div>`;
+        el.comparisonContainer.innerHTML = headers;
+        applyTranslations();
+        
+        const mediaTypes = [ { title: 'Screenshot', key: 'image' }, { title: 'Video', key: 'video', isVideo: true }, { title: 'Logo', key: 'marquee' }, { title: 'Boxart', key: 'thumbnail' }];
+
+        for (const media of mediaTypes) {
+            const currentRawPath = romDetails[`${media.key}_path`];
+            const currentBox = createMediaBox(media.title, currentRawPath, systemNameFromUrl, media.isVideo, false);
+            el.comparisonContainer.appendChild(currentBox);
+            
+            const newFile = newFiles.find(f => f.media_type === media.key);
+            const newPath = newFile ? newFile.url : null;
+            const newBox = createMediaBox(media.title, newPath, null, media.isVideo, true, newFile);
+            el.comparisonContainer.appendChild(newBox);
+        }
+    }
+
+    function createMediaBox(title, mediaPath, system, isVideo, isNew, fileData) {
+        const box = document.createElement('div'); box.className = 'media-box';
+        const h4 = document.createElement('h4'); h4.textContent = title; box.appendChild(h4);
+        const mediaContent = document.createElement('div');
+        mediaContent.style.height = '160px'; mediaContent.style.display = 'flex';
+        mediaContent.style.alignItems = 'center'; mediaContent.style.justifyContent = 'center';
+
+        if (!mediaPath) {
+            const placeholder = document.createElement('p'); placeholder.className = 'missing';
+            placeholder.textContent = isNew ? '' : 'MISSING';
+            mediaContent.appendChild(placeholder);
+        } else {
+            let fullPath;
+            if (mediaPath.startsWith('/')) { fullPath = mediaPath; } 
+            else { fullPath = `/roms/${encodeURIComponent(system)}/${mediaPath.replace('./', '')}`; }
+
+            // --- ADDED: Cache-Busting Timestamp ---
+            fullPath += `?t=${new Date().getTime()}`;
+
+            const mediaEl = document.createElement(isVideo ? 'video' : 'img');
+            mediaEl.src = fullPath;
+            mediaEl.title = "Click to view larger";
+            mediaEl.onclick = () => openModal(fullPath, isVideo);
+            mediaEl.onerror = function() {
+                const missing = document.createElement('p'); missing.className = 'missing'; missing.textContent = 'MISSING';
+                if(this.parentNode) this.parentNode.replaceChild(missing, this);
+            };
+            mediaContent.appendChild(mediaEl);
+        }
+        box.appendChild(mediaContent);
+        if (isNew) {
+            const cbLabel = document.createElement('label'); cbLabel.style.marginTop = 'auto';
+            const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'temp-media-checkbox';
+            if (fileData) {
+                cb.checked = true; cb.dataset.filename = fileData.original_filename; cb.dataset.type = fileData.media_type;
+                const labelText = document.createElement('span'); labelText.dataset.i18n = "save_this_label";
+                cbLabel.append(cb, labelText); applyTranslations();
+            } else { cb.style.visibility = 'hidden'; }
+            box.appendChild(cbLabel);
+        }
+        return box;
+    }
+    
+    async function startDiagnoseScrape() {
+        const romName = el.romNameInput.value.trim(), systemName = el.systemSelect.value;
+        if (!romName || !systemName) return alert("Please enter a ROM name and select a system.");
+        el.startBtn.disabled = true; el.confirmBtn.disabled = true;
+        el.logbox.textContent = "Starting temporary scrape for preview...\n";
+        try {
+            const data = await fetch("/diagnose-scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ romName, systemName }) }).then(res => res.ok ? res.json() : res.text().then(text => Promise.reject(new Error(text))));
+            diagnoseSessionId = data.session_id;
+            sessionStorage.setItem('diagnoseSessionId', diagnoseSessionId);
+            sessionStorage.setItem('tempMediaFiles', JSON.stringify(data.files));
+            sessionStorage.setItem('diagnoseRomName', romName);
+            sessionStorage.setItem('diagnoseSystemName', systemName);
+            sessionStorage.setItem('diagnoseRomPath', romPathFromUrl);
+            el.logbox.textContent += `Preview scrape complete. Found ${data.files.length} media items.\n`;
+            const romDetailsRes = await fetch(`/get-rom-details?romPath=${encodeURIComponent(romPathFromUrl)}&system=${encodeURIComponent(systemNameFromUrl)}`);
+            const romDetails = romDetailsRes.ok ? await romDetailsRes.json() : {};
+            renderComparisonView(romDetails, data.files);
+            if (data.files.length > 0) el.confirmBtn.disabled = false;
+        } catch (error) {
+            el.logbox.textContent += `\nFailed to start diagnose scrape: ${error.message}`;
+        } finally {
+            el.startBtn.disabled = false;
+        }
+    }
+    
+    async function confirmScrape() {
+        if (!diagnoseSessionId) return alert("Error: No active diagnose session.");
+        const filesToSave = Array.from(document.querySelectorAll('.temp-media-checkbox:checked')).map(cb => ({ original_filename: cb.dataset.filename, media_type: cb.dataset.type }));
+        if (filesToSave.length === 0) return alert("No media selected to save.");
+
+        el.logbox.textContent += "\nConfirming and saving selected media...\n";
+        el.confirmBtn.disabled = true;
+        
+        try {
+            // Step 1: Send the command to save the files and update the gamelist.xml on disk
+            const saveData = await fetch("/confirm-scrape", { 
+                method: "POST", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ session_id: diagnoseSessionId, original_rom_path: romPathFromUrl, original_system: systemNameFromUrl, new_rom_name: el.romNameInput.value.trim(), new_system: el.systemSelect.value, files_to_save: filesToSave }) 
+            }).then(res => res.ok ? res.json() : res.text().then(text => Promise.reject(new Error(text))));
+
+            el.logbox.textContent += `Save complete! Status: ${saveData.status}.\nRefreshing view...`;
+
+            // --- NEW: Force the server to rebuild its in-memory cache ---
+            // This ensures the next request gets the fresh data from the updated gamelist.xml
+            await fetch('/get-system-data');
+
+            // Step 2: Now that the cache is fresh, get the updated details for this specific ROM
+            const romDetailsRes = await fetch(`/get-rom-details?romPath=${encodeURIComponent(romPathFromUrl)}&system=${encodeURIComponent(systemNameFromUrl)}`);
+            const romDetails = romDetailsRes.ok ? await romDetailsRes.json() : {};
+
+            // Step 3: Re-render the view. The "Current Media" will now show the new images.
+            renderComparisonView(romDetails, []); // Pass empty array for the "New Media" side
+
+            el.logbox.textContent += "\nView refreshed successfully. You can now go back.";
+            
+            // Clean up the diagnose session from storage
+            sessionStorage.removeItem('diagnoseSessionId');
+            sessionStorage.removeItem('tempMediaFiles');
+
+        } catch (error) {
+            el.logbox.textContent += `\nFailed to save media: ${error.message}`;
+            el.confirmBtn.disabled = false; // Re-enable button on failure
+        }
+    }
+    
+    function goBackAndCleanup() {
+        const sessionId = sessionStorage.getItem('diagnoseSessionId');
+        if (sessionId) {
+            fetch('/cleanup-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: sessionId }), keepalive: true }).catch(err => console.error("Cleanup request failed:", err));
+        }
+        sessionStorage.removeItem('diagnoseSessionId');
+        sessionStorage.removeItem('tempMediaFiles');
+        sessionStorage.removeItem('diagnoseRomName');
+        sessionStorage.removeItem('diagnoseSystemName');
+        sessionStorage.removeItem('diagnoseRomPath');
+        window.location.href = 'index.html';
+    }
+
+    function openModal(url, isVideo) {
+        const overlay = document.getElementById('lightbox-overlay'), content = document.getElementById('lightbox-content');
+        content.innerHTML = '';
+        const mediaElement = document.createElement(isVideo ? 'video' : 'img');
+        mediaElement.src = url;
+        if (isVideo) {
+            mediaElement.controls = mediaElement.autoplay = true;
+            mediaElement.onerror = () => { content.innerHTML = `<div style="padding:2em;text-align:center;color:white;"><p>Video format not supported by this browser.</p><a href="${url}" download style="color:var(--accent-primary);">Download Video</a></div>`; };
+        }
+        content.appendChild(mediaElement); overlay.style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('lightbox-overlay').style.display = 'none'; document.getElementById('lightbox-content').innerHTML = ''; }
+</script>
+</body>
+</html>
